@@ -162,4 +162,3 @@ EoR的最終目標是將「對戰已經全部」結束的確認訊息提供給�
 ## Pokemon Trading Card Game Rulings Compendium
 * [Resources for Judges](https://compendium.pokegym.net/resources-for-judges/)
 * [Pokémon TCG Judge Manual](https://compendium.pokegym.net/judge-manual-latest.pdf)
-<!-- deploy-verification-marker -->
