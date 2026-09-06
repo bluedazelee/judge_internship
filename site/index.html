@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Judge 裁判實習教材</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button id="sidebar-toggle" class="sidebar-toggle" type="button"
+          aria-label="開啟目錄" aria-expanded="false" aria-controls="sidebar">
+    <span class="hamburger" aria-hidden="true"></span>
+  </button>
+  <h1 class="topbar-title">Judge 裁判實習教材</h1>
+</header>
+
+<div id="sidebar-scrim" class="sidebar-scrim" hidden></div>
+
+<aside id="sidebar" class="sidebar" aria-label="目錄與搜尋">
+  <div class="search">
+    <input id="search-input" class="search-input" type="search"
+           placeholder="搜尋內文…" autocomplete="off" spellcheck="false"
+           aria-label="搜尋文件內容">
+    <p id="search-status" class="search-status" role="status" aria-live="polite"></p>
+  </div>
+  <div class="toc-area">
+    <nav id="toc" class="toc" aria-label="文件目錄"></nav>
+    <p id="toc-empty" class="toc-empty" role="status" hidden>無符合結果</p>
+  </div>
+</aside>
+
+<main class="content">
+  <article id="doc" class="doc"></article>
+</main>
+
+<!-- 本地隨附的 Markdown 解析器。刻意不使用 CDN：賽場網路可能不穩，
+     CDN 失效會導致整頁空白。授權條文見 vendor/marked-LICENSE.txt。 -->
+<script src="vendor/marked.umd.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

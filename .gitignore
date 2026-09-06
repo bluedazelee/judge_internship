@@ -1,0 +1,20 @@
+# 這個 repo 會公開發布到 GitHub Pages，因此規格工作區與 AI 工作流設定
+# 一律不納入版本控制。
+#
+# 注意：這份清單必須在第一次提交之前就設定完成。只要有任何一次提交把
+# 這些路徑納入，即使日後刪除，內容仍可從 git 歷史中取得。
+
+# Spectra 規格工作區與本機狀態
+openspec/
+.spectra/
+.spectra.yaml
+
+# AI 工作流設定
+.claude/
+.agent/
+.agents/
+
+# AI 指示文件（三份為同一份 Spectra 指示的不同工具版本）
+AGENTS.md
+CLAUDE.md
+GEMINI.md

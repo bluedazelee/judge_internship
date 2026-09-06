@@ -1,0 +1,325 @@
+/* Judge 文件閱讀器 */
+
+:root {
+  --topbar-height: 56px;
+  --sidebar-width: 300px;
+  --content-max: 780px;
+
+  --color-bg: #ffffff;
+  --color-bg-sidebar: #f6f7f9;
+  --color-text: #1c1f23;
+  --color-text-muted: #6b7280;
+  --color-border: #dfe3e8;
+  --color-accent: #1d5fbf;
+  --color-accent-soft: #e7effb;
+  --color-hit: #fff2a8;
+  --color-hit-current: #ffb838;
+  --color-error-bg: #fdf3f2;
+  --color-error-border: #e0b4ae;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei",
+               "Hiragino Sans", system-ui, sans-serif;
+  /* 中文長文閱讀：字級略大、行高放寬，段落之間才不會擠成一片 */
+  font-size: 17px;
+  line-height: 1.85;
+}
+
+/* ---------- 頁首 ---------- */
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  z-index: 30;
+}
+
+.topbar-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 漢堡按鈕只在窄螢幕出現；桌機寬度下側欄常駐，不需要切換 */
+.sidebar-toggle {
+  display: none;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.hamburger,
+.hamburger::before,
+.hamburger::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  margin: 0 auto;
+  background: var(--color-text);
+  content: "";
+}
+
+.hamburger::before { transform: translateY(-6px); }
+.hamburger::after { transform: translateY(4px); }
+
+/* ---------- 側欄 ---------- */
+
+.sidebar {
+  position: fixed;
+  top: var(--topbar-height);
+  bottom: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-sidebar);
+  border-right: 1px solid var(--color-border);
+  z-index: 20;
+}
+
+.search {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: inherit;
+  font: inherit;
+  font-size: 15px;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+}
+
+.search-status {
+  min-height: 1.2em;
+  margin: 6px 2px 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.toc-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 8px 24px;
+}
+
+.toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toc-link {
+  display: block;
+  padding: 5px 10px;
+  border-radius: 5px;
+  color: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.toc-link:hover { background: rgba(0, 0, 0, 0.05); }
+
+.toc-level-1 > .toc-link { padding-left: 10px; font-weight: 600; }
+.toc-level-2 > .toc-link { padding-left: 26px; }
+.toc-level-3 > .toc-link { padding-left: 42px; font-size: 13px; }
+
+/* 捲動追蹤：任一時刻恰有一項為當前位置 */
+.toc-item.is-active > .toc-link {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* 搜尋過濾 */
+.toc-item.is-filtered-out { display: none; }
+
+/* 純作為階層脈絡保留的項目，必須與自身命中的項目在視覺上可區分 */
+.toc-item.is-context > .toc-link {
+  color: var(--color-text-muted);
+  opacity: 0.65;
+}
+
+.toc-item.is-match > .toc-link { font-weight: 600; }
+
+.toc-empty {
+  margin: 12px 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.sidebar-scrim { display: none; }
+
+/* ---------- 內文 ---------- */
+
+.content {
+  margin-left: var(--sidebar-width);
+  padding: calc(var(--topbar-height) + 24px) 32px 96px;
+}
+
+.doc {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+/* 跳轉時預留頁首高度，否則目標標題會被固定頁首蓋住。
+   用 scroll-margin-top 讓瀏覽器處理，比在 JS 裡自行計算偏移量可靠。 */
+.doc h1,
+.doc h2,
+.doc h3 {
+  scroll-margin-top: calc(var(--topbar-height) + 16px);
+  line-height: 1.45;
+}
+
+.doc h1 {
+  margin: 2.2em 0 0.8em;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--color-border);
+  font-size: 1.75em;
+}
+
+.doc h1:first-child { margin-top: 0; }
+
+.doc h2 {
+  margin: 1.9em 0 0.6em;
+  font-size: 1.35em;
+}
+
+.doc h3 {
+  margin: 1.5em 0 0.5em;
+  font-size: 1.12em;
+}
+
+.doc p { margin: 0.9em 0; }
+
+.doc ul,
+.doc ol {
+  margin: 0.9em 0;
+  padding-left: 1.7em;
+}
+
+.doc li { margin: 0.45em 0; }
+
+.doc a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+
+.doc hr {
+  margin: 2em 0;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+/* ---------- 搜尋高亮 ---------- */
+
+mark.search-hit {
+  padding: 0 1px;
+  border-radius: 2px;
+  background: var(--color-hit);
+  color: inherit;
+}
+
+/* 當前命中處必須與其他命中處明顯不同，否則逐一跳轉時看不出跳到哪 */
+mark.search-hit.is-current {
+  background: var(--color-hit-current);
+  box-shadow: 0 0 0 2px var(--color-hit-current);
+  font-weight: 600;
+}
+
+/* ---------- 載入失敗 ---------- */
+
+.load-error {
+  margin: 8px 0;
+  padding: 20px 24px;
+  border: 1px solid var(--color-error-border);
+  border-radius: 8px;
+  background: var(--color-error-bg);
+}
+
+.load-error h2 {
+  margin: 0 0 0.6em;
+  font-size: 1.2em;
+}
+
+.load-error ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.load-error-technical {
+  margin: 1em 0 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+/* ---------- 窄螢幕 ---------- */
+
+@media (max-width: 767px) {
+  body { font-size: 16px; }
+
+  .sidebar-toggle { display: block; }
+
+  /* 側欄改為蓋在內文之上，預設隱藏 */
+  .sidebar {
+    width: min(85vw, var(--sidebar-width));
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  body.sidebar-open .sidebar { transform: translateX(0); }
+
+  .sidebar-scrim {
+    position: fixed;
+    top: var(--topbar-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 15;
+  }
+
+  body.sidebar-open .sidebar-scrim { display: block; }
+
+  .content {
+    margin-left: 0;
+    padding: calc(var(--topbar-height) + 16px) 18px 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .sidebar { transition: none; }
+}
