@@ -18,3 +18,4 @@ openspec/
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+openspec/.vector-search.db*
